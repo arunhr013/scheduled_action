@@ -7,6 +7,15 @@ on:
         description: 'Input data to log'
         required: true
         default: 'default entry'
+      server:
+         description: 'server detail'
+         required: true
+         default: 'Azure'
+      scheduleTime:
+         description: 'enter time of execution'
+         required: true
+         default: $(date +"%Y-%m-%d %H:%M:%S")
+
 
 permissions:
   contents: write  # Allows actions to write to the repository
