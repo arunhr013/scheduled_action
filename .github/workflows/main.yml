@@ -1,6 +1,8 @@
 name: Collect Input and Log to CSV
 
 on:
+  schedule:
+    - cron: '*/5 * * * *' 
   workflow_dispatch:
     inputs:
       log_entry:
@@ -45,3 +47,30 @@ jobs:
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  check-schedule:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Read CSV and Check Time
+        id: check_time
+        run: |
+          # Get current time in HH:MM format
+          current_time=$(date +"%H:%M")
+          echo "Current time: $current_time"
+          
+          # Check if current time matches any entry in the CSV
+          if grep -q "$current_time" schedule_log.csv; then
+            echo "Match found for current time: $current_time"
+            echo "::set-output name=run_job::true"
+          else
+            echo "No match found."
+            echo "::set-output name=run_job::false"
+          fi
+
+      - name: Run Job if Time Matches
+        if: steps.check_time.outputs.run_job == 'true'
+        run: |
+          echo "Running scheduled job because the current time matches."
+          # Place your job logic here
