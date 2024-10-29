@@ -1,0 +1,30 @@
+name: Scheduled Time Logger
+
+on:
+  schedule:
+    # This cron expression runs the job every hour
+    - cron: '0 * * * *'
+
+jobs:
+  log-time:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Log current time
+        run: |
+          # Get the current date and time
+          current_time=$(date +"%Y-%m-%d %H:%M:%S")
+          # Append to the CSV file
+          echo "$current_time" >> time_log.csv
+
+      - name: Commit changes
+        run: |
+          git config --local user.name "GitHub Action"
+          git config --local user.email "action@github.com"
+          git add time_log.csv
+          git commit -m "Update time_log.csv with current time"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
