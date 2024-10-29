@@ -31,15 +31,11 @@ jobs:
         run: |
           # Check if the CSV file exists, create it if not
           if [ ! -f input_log.csv ]; then
-            echo "Log Entry" > input_log.csv
-            echo "server" > input_log.csv
-            echo "scheduleTime" > input_log.csv
+            echo "log_entry,server,scheduleTime" > input_log.csv
           fi
           # Append the input to the CSV
-          echo "${{ github.event.inputs.log_entry }}" >> input_log.csv
-          echo "${{ github.event.inputs.server }}" >> input_log.csv
-          echo "${{ github.event.inputs.scheduleTime }}" >> input_log.csv
-
+          echo "${{ github.event.inputs.log_entry}},${{ github.event.inputs.server }},${{ github.event.inputs.server }}" >> input_log.csv
+   
       - name: Commit changes
         run: |
           git config --local user.name "GitHub Action"
