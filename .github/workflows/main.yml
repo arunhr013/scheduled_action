@@ -61,7 +61,7 @@ jobs:
           echo "Current time: $current_time"
           
           # Check if current time matches any entry in the CSV
-          if grep -q "$current_time" schedule_log.csv; then
+          if grep -q "$current_time" input_log.csv; then
             echo "Match found for current time: $current_time"
             echo "::set-output name=run_job::true"
           else
