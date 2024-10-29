@@ -3,7 +3,7 @@ name: Scheduled Time Logger
 on:
   schedule:
     # This cron expression runs the job every hour
-    - cron: '0 * * * *'
+    - cron: '*/5 * * * *'
 
 jobs:
   log-time:
