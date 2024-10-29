@@ -8,6 +8,9 @@ on:
         required: true
         default: 'default entry'
 
+permissions:
+  contents: write  # Allows actions to write to the repository
+
 jobs:
   log-input:
     runs-on: ubuntu-latest
@@ -17,7 +20,11 @@ jobs:
 
       - name: Append input to CSV
         run: |
-          # Get the input from the workflow
+          # Check if the CSV file exists, create it if not
+          if [ ! -f input_log.csv ]; then
+            echo "Log Entry" > input_log.csv
+          fi
+          # Append the input to the CSV
           echo "${{ github.event.inputs.log_entry }}" >> input_log.csv
 
       - name: Commit changes
