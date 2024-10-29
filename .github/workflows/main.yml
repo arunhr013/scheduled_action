@@ -34,7 +34,7 @@ jobs:
             echo "log_entry,server,scheduleTime" > input_log.csv
           fi
           # Append the input to the CSV
-          echo "${{ github.event.inputs.log_entry}},${{ github.event.inputs.server }},${{ github.event.inputs.server }}" >> input_log.csv
+          echo "${{ github.event.inputs.log_entry}},${{ github.event.inputs.server }},${{ github.event.inputs.scheduleTime }}" >> input_log.csv
    
       - name: Commit changes
         run: |
