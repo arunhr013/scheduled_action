@@ -56,21 +56,26 @@ jobs:
       - name: Read CSV and Check Time
         id: check_time
         run: |
-          # Get current time in HH:MM format
-          current_time=$(date +"%H:%M")
+          # Get current date and time in the format YYYY-MM-DD HH:MM
+          current_time=$(date +"%Y-%m-%d %H:%M")
           echo "Current time: $current_time"
           
-          # Check if current time matches any entry in the CSV
-          if grep -q "$current_time" input_log.csv; then
-            echo "Match found for current time: $current_time"
-            echo "::set-output name=run_job::true"
-          else
-            echo "No match found."
-            echo "::set-output name=run_job::false"
-          fi
+          # Check if any entry in the CSV is less than the current time
+          while IFS=, read -r run_time; do
+            if [ "$scheduleTime" != "scheduleTime" ]; then  # Skip header
+              if [[ "$scheduleTime" < "$current_time" ]]; then
+                echo "Job scheduled for $run_time has passed."
+                echo "::set-output name=run_job::true"
+                exit 0
+              fi
+            fi
+          done < input_log.csv
 
-      - name: Run Job if Time Matches
+          echo "No jobs have passed the current time."
+          echo "::set-output name=run_job::false"
+
+      - name: Run Job if Time is Passed
         if: steps.check_time.outputs.run_job == 'true'
         run: |
-          echo "Running scheduled job because the current time matches."
+          echo "Running scheduled job because the time has passed."
           # Place your job logic here
