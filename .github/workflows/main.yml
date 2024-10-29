@@ -37,6 +37,8 @@ jobs:
           fi
           # Append the input to the CSV
           echo "${{ github.event.inputs.log_entry }}" >> input_log.csv
+          echo "${{ github.event.inputs.server }}" >> input_log.csv
+          echo "${{ github.event.inputs.scheduleTime }}" >> input_log.csv
 
       - name: Commit changes
         run: |
