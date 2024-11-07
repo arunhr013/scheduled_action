@@ -68,8 +68,7 @@ jobs:
           export DISPLAY=:99  # Set DISPLAY environment variable to the virtual display
           sudo apt-get update
           sudo apt-get install imagemagick
-          import csv
-          from datetime import datetime
+         
 
           # File paths for the input and output CSV
           input_file = 'input_log.csv'
@@ -113,7 +112,6 @@ jobs:
               csv_writer.writerows(rows_to_keep)
 
           # Optionally, replace the old file with the updated one (if required)
-          import shutil
           shutil.move(output_file, input_file)
 
       - name: Run scheduled jobs
