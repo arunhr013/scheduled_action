@@ -98,7 +98,6 @@ jobs:
           cat "$input_file"
           
           # Optionally, clean up the temp file
-          rm "$temp_file"
           
 
 
