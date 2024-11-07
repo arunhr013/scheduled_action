@@ -54,42 +54,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
       
-      - name: Read CSV, execute jobs and delete processed entries
-        id: process_csv
-        run: |
-          # Current time in the format YYYY-MM-DD HH:MM:SS
-          current_time=$(date "+%Y-%m-%d %H:%M:%S")
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'  # or any version you prefer
 
-          input_file="input_log.csv"
-          temp_file="temp_input_log.csv"
+      - name: Install dependencies
+        run: npm install
 
-          # Create an empty temporary file for the new CSV
-          touch "$temp_file"
-
-          # Loop through each row of the CSV and process it
-          while IFS=, read -r log_entry server scheduleTime file_name; do
-            # Skip header row
-            if [ "$log_entry" == "log_entry" ]; then
-              continue
-            fi
-
-            # Check if scheduleTime is less than or equal to current time
-            if [[ "$scheduleTime" < "$current_time" || "$scheduleTime" == "$current_time" ]]; then
-              echo "Job scheduled for $log_entry has passed. Executing it now."
-
-              # Here, you would call your job execution logic, for example:
-              # ./run_job.sh "$log_entry" "$server" "$file_name"
-              # Or use any custom commands that you need to trigger the job.
-
-            else
-              # If the job is in the future, keep the row in the temp file
-              echo "$log_entry,$server,$scheduleTime,$file_name" >> "$temp_file"
-            fi
-          done < "$input_file"
-
-          # Replace the original input file with the new file
-          mv "$temp_file" "$input_file"
-
-      - name: Handle no jobs to run
-        if: success() && steps.process_csv.outputs.jobs_to_run == ''
-        run: echo "No jobs need to be run at this time."
+      - name: Run CSV processing script
+        run: node process_csv.js
