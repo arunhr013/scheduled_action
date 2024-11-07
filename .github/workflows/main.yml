@@ -53,80 +53,70 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
-      - name: Set up Python (required for CSV parsing and manipulation)
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      - name: Read CSV, process jobs, and remove processed entries
-        id: read_csv
+      - name: Read CSV, execute jobs and delete processed entries
+        id: run_jobs
         run: |
-         python -m pip install --upgrade pip  # Ensure pip is up-to-date
-         sudo apt-get install -y xvfb
-          Xvfb :99 -screen 0 1280x1024x24 &  # Start a virtual display on display :99
-          export DISPLAY=:99  # Set DISPLAY environment variable to the virtual display
-          sudo apt-get update
-          sudo apt-get install imagemagick
-         
+          import csv
+          from datetime import datetime
+          import shutil
 
-          # File paths for the input and output CSV
+          # Define file paths
           input_file = 'input_log.csv'
-          output_file = 'updated_input_log.csv'
+          temp_file = 'temp_input_log.csv'
 
-          # Read the CSV file
-          with open(input_file, mode='r') as file:
-              csv_reader = csv.DictReader(file)
-              current_time = datetime.now()
+          # Get current time
+          current_time = datetime.now()
 
-              # Initialize a list to store jobs to run and the rows to keep
-              jobs_to_run = []
+          # Open and read the input CSV file
+          with open(input_file, mode='r') as infile:
+              csv_reader = csv.DictReader(infile)
               rows_to_keep = []
+              jobs_to_run = []
 
-              # Check each row in the CSV file
+              # Loop through each row and check the scheduleTime
               for row in csv_reader:
-                  schedule_time = row['scheduleTime']
-                  schedule_time_obj = datetime.strptime(schedule_time, "%Y-%m-%d %H:%M:%S")
+                  schedule_time = datetime.strptime(row['scheduleTime'], "%Y-%m-%d %H:%M:%S")
 
-                  # If schedule time is past or equal to current time, store it in jobs_to_run
-                  if schedule_time_obj <= current_time:
+                  # If the scheduled time is in the past or present, add the job to jobs_to_run
+                  if schedule_time <= current_time:
                       jobs_to_run.append(row)
                   else:
-                      # Keep the row for future processing if not yet due
                       rows_to_keep.append(row)
 
-              # Output the jobs that need to run
+              # Log the jobs that need to be run
               if jobs_to_run:
                   print(f"Jobs to run: {jobs_to_run}")
                   print(f"::set-output name=jobs_to_run::{jobs_to_run}")
               else:
-                  print("No jobs need to be run at this time.")
+                  print("No jobs to run at this time.")
 
-          # Write the updated CSV with remaining rows
-          with open(output_file, mode='w', newline='') as file:
-              fieldnames = ['log_entry', 'server', 'scheduleTime']
-              csv_writer = csv.DictWriter(file, fieldnames=fieldnames)
-
-              # Write header and remaining rows to the new CSV
+          # Write the remaining rows (future jobs) back to the CSV
+          with open(temp_file, mode='w', newline='') as outfile:
+              fieldnames = ['log_entry', 'server', 'scheduleTime', 'file_name']
+              csv_writer = csv.DictWriter(outfile, fieldnames=fieldnames)
               csv_writer.writeheader()
               csv_writer.writerows(rows_to_keep)
 
-          # Optionally, replace the old file with the updated one (if required)
-          shutil.move(output_file, input_file)
+          # Optionally, replace the old file with the updated one
+          shutil.move(temp_file, input_file)
 
       - name: Run scheduled jobs
-        if: steps.read_csv.outputs.jobs_to_run != '[]'  # Check if jobs are found
+        if: steps.run_jobs.outputs.jobs_to_run != '[]'
         run: |
-          # Get jobs to run from the output
-          jobs_to_run="${{ steps.read_csv.outputs.jobs_to_run }}"
+          jobs_to_run="${{ steps.run_jobs.outputs.jobs_to_run }}"
           echo "Running the scheduled jobs: $jobs_to_run"
-
-          # Loop through the jobs and execute them
+          
+          # Process the jobs and execute them
           for job in $(echo $jobs_to_run | jq -r '.[].log_entry'); do
             echo "Running job: $job"
-            # Insert the actual logic to run the job (e.g., trigger a script or workflow)
+            # Insert your job logic here, e.g., run scripts or commands based on log_entry
           done
 
       - name: Handle no jobs to run
-        if: steps.read_csv.outputs.jobs_to_run == '[]'  # If no jobs are due
-        run: echo "No scheduled jobs to run at this time."
+        if: steps.run_jobs.outputs.jobs_to_run == '[]'
+        run: echo "No jobs need to be run at this time."
