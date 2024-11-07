@@ -62,6 +62,10 @@ jobs:
       - name: Read CSV, process jobs, and remove processed entries
         id: read_csv
         run: |
+         python -m pip install --upgrade pip  # Ensure pip is up-to-date
+          import csv
+          from datetime import datetime
+
           # File paths for the input and output CSV
           input_file = 'input_log.csv'
           output_file = 'updated_input_log.csv'
@@ -104,6 +108,7 @@ jobs:
               csv_writer.writerows(rows_to_keep)
 
           # Optionally, replace the old file with the updated one (if required)
+          import shutil
           shutil.move(output_file, input_file)
 
       - name: Run scheduled jobs
