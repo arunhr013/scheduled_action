@@ -53,70 +53,43 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-
+      
       - name: Read CSV, execute jobs and delete processed entries
-        id: run_jobs
+        id: process_csv
         run: |
-          import csv
-          from datetime import datetime
-          import shutil
+          # Current time in the format YYYY-MM-DD HH:MM:SS
+          current_time=$(date "+%Y-%m-%d %H:%M:%S")
 
-          # Define file paths
-          input_file = 'input_log.csv'
-          temp_file = 'temp_input_log.csv'
+          input_file="input_log.csv"
+          temp_file="temp_input_log.csv"
 
-          # Get current time
-          current_time = datetime.now()
+          # Create an empty temporary file for the new CSV
+          touch "$temp_file"
 
-          # Open and read the input CSV file
-          with open(input_file, mode='r') as infile:
-              csv_reader = csv.DictReader(infile)
-              rows_to_keep = []
-              jobs_to_run = []
+          # Loop through each row of the CSV and process it
+          while IFS=, read -r log_entry server scheduleTime file_name; do
+            # Skip header row
+            if [ "$log_entry" == "log_entry" ]; then
+              continue
+            fi
 
-              # Loop through each row and check the scheduleTime
-              for row in csv_reader:
-                  schedule_time = datetime.strptime(row['scheduleTime'], "%Y-%m-%d %H:%M:%S")
+            # Check if scheduleTime is less than or equal to current time
+            if [[ "$scheduleTime" < "$current_time" || "$scheduleTime" == "$current_time" ]]; then
+              echo "Job scheduled for $log_entry has passed. Executing it now."
 
-                  # If the scheduled time is in the past or present, add the job to jobs_to_run
-                  if schedule_time <= current_time:
-                      jobs_to_run.append(row)
-                  else:
-                      rows_to_keep.append(row)
+              # Here, you would call your job execution logic, for example:
+              # ./run_job.sh "$log_entry" "$server" "$file_name"
+              # Or use any custom commands that you need to trigger the job.
 
-              # Log the jobs that need to be run
-              if jobs_to_run:
-                  print(f"Jobs to run: {jobs_to_run}")
-                  print(f"::set-output name=jobs_to_run::{jobs_to_run}")
-              else:
-                  print("No jobs to run at this time.")
+            else
+              # If the job is in the future, keep the row in the temp file
+              echo "$log_entry,$server,$scheduleTime,$file_name" >> "$temp_file"
+            fi
+          done < "$input_file"
 
-          # Write the remaining rows (future jobs) back to the CSV
-          with open(temp_file, mode='w', newline='') as outfile:
-              fieldnames = ['log_entry', 'server', 'scheduleTime', 'file_name']
-              csv_writer = csv.DictWriter(outfile, fieldnames=fieldnames)
-              csv_writer.writeheader()
-              csv_writer.writerows(rows_to_keep)
-
-          # Optionally, replace the old file with the updated one
-          shutil.move(temp_file, input_file)
-
-      - name: Run scheduled jobs
-        if: steps.run_jobs.outputs.jobs_to_run != '[]'
-        run: |
-          jobs_to_run="${{ steps.run_jobs.outputs.jobs_to_run }}"
-          echo "Running the scheduled jobs: $jobs_to_run"
-          
-          # Process the jobs and execute them
-          for job in $(echo $jobs_to_run | jq -r '.[].log_entry'); do
-            echo "Running job: $job"
-            # Insert your job logic here, e.g., run scripts or commands based on log_entry
-          done
+          # Replace the original input file with the new file
+          mv "$temp_file" "$input_file"
 
       - name: Handle no jobs to run
-        if: steps.run_jobs.outputs.jobs_to_run == '[]'
+        if: success() && steps.process_csv.outputs.jobs_to_run == ''
         run: echo "No jobs need to be run at this time."
