@@ -59,8 +59,5 @@ jobs:
         with:
           node-version: '16'  # or any version you prefer
 
-      - name: Install dependencies
-        run: npm install
-
       - name: Run CSV processing script
         run: node process_csv.js
