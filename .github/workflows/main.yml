@@ -53,29 +53,75 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Read CSV and Check Time
-        id: check_time
-        run: |
-          # Get current date and time in the format YYYY-MM-DD HH:MM
-          current_time=$(date +"%Y-%m-%d %H:%M")
-          echo "Current time: $current_time"
-          
-          # Check if any entry in the CSV is less than the current time
-          while IFS=, read -r run_time; do
-            if [ "$scheduleTime" != "scheduleTime" ]; then  # Skip header
-              if [[ "$scheduleTime" < "$current_time" ]]; then
-                echo "Job scheduled for $run_time has passed."
-                echo "::set-output name=run_job::true"
-                exit 0
-              fi
-            fi
-          done < input_log.csv
+      - name: Set up Python (required for CSV parsing and manipulation)
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
 
-          echo "No jobs have passed the current time."
-          echo "::set-output name=run_job::false"
-
-      - name: Run Job if Time is Passed
-        if: steps.check_time.outputs.run_job == 'true'
+      - name: Read CSV, process jobs, and remove processed entries
+        id: read_csv
         run: |
-          echo "Running scheduled job because the time has passed."
-          # Place your job logic here
+          import csv
+          from datetime import datetime
+
+          # File paths for the input and output CSV
+          input_file = 'input_log.csv'
+          output_file = 'updated_input_log.csv'
+
+          # Read the CSV file
+          with open(input_file, mode='r') as file:
+              csv_reader = csv.DictReader(file)
+              current_time = datetime.now()
+
+              # Initialize a list to store jobs to run and the rows to keep
+              jobs_to_run = []
+              rows_to_keep = []
+
+              # Check each row in the CSV file
+              for row in csv_reader:
+                  schedule_time = row['scheduleTime']
+                  schedule_time_obj = datetime.strptime(schedule_time, "%Y-%m-%d %H:%M:%S")
+
+                  # If schedule time is past or equal to current time, store it in jobs_to_run
+                  if schedule_time_obj <= current_time:
+                      jobs_to_run.append(row)
+                  else:
+                      # Keep the row for future processing if not yet due
+                      rows_to_keep.append(row)
+
+              # Output the jobs that need to run
+              if jobs_to_run:
+                  print(f"Jobs to run: {jobs_to_run}")
+                  print(f"::set-output name=jobs_to_run::{jobs_to_run}")
+              else:
+                  print("No jobs need to be run at this time.")
+
+          # Write the updated CSV with remaining rows
+          with open(output_file, mode='w', newline='') as file:
+              fieldnames = ['log_entry', 'server', 'scheduleTime']
+              csv_writer = csv.DictWriter(file, fieldnames=fieldnames)
+
+              # Write header and remaining rows to the new CSV
+              csv_writer.writeheader()
+              csv_writer.writerows(rows_to_keep)
+
+          # Optionally, replace the old file with the updated one (if required)
+          import shutil
+          shutil.move(output_file, input_file)
+
+      - name: Run scheduled jobs
+        if: steps.read_csv.outputs.jobs_to_run != '[]'  # Check if jobs are found
+        run: |
+          # Get jobs to run from the output
+          jobs_to_run="${{ steps.read_csv.outputs.jobs_to_run }}"
+          echo "Running the scheduled jobs: $jobs_to_run"
+
+          # Loop through the jobs and execute them
+          for job in $(echo $jobs_to_run | jq -r '.[].log_entry'); do
+            echo "Running job: $job"
+            # Insert the actual logic to run the job (e.g., trigger a script or workflow)
+          done
+
+      - name: Handle no jobs to run
+        if: steps.read_csv.outputs.jobs_to_run == '[]'  # If no jobs are due
+        run: echo "No scheduled jobs to run at this time."
