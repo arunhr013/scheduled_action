@@ -109,20 +109,9 @@ jobs:
        # Step 3: Commit the changes to the repository
       - name: Commit changes if any
         run: |
-          # Configure Git
           git config --local user.name "GitHub Action"
           git config --local user.email "action@github.com"
-
-          # Check if the file has been modified
-          git diff --exit-code "$input_file"
-          if [ $? -ne 0 ]; then
-            # Stage the changed file
-            git add "$input_file"
-            # Commit the changes
-            git commit -m "Update input_log.csv with processed jobs"
-            # Push the changes to the repository
-            git pull
-            git push origin HEAD:main  # Use your default branch name if it's not 'main'
-          else
-            echo "No changes detected in $input_file"
-          fi
+          git add input_log.csv
+          git commit -m "Log input entry: ${{ github.event.inputs.log_entry }}"
+          git pull
+          git push
