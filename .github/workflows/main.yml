@@ -44,6 +44,7 @@ jobs:
           git config --local user.email "action@github.com"
           git add input_log.csv
           git commit -m "Log input entry: ${{ github.event.inputs.log_entry }}"
+          git pull
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
