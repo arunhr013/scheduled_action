@@ -87,9 +87,16 @@ jobs:
           
           # Use cp instead of mv to replace the original file with the new one
           cp "$temp_file" "$input_file"
+
+          ls -l "$input_file"
+          cat "$input_file"
+
+           ls -l "$temp_file"
+          cat "$temp_file"
           
           # Optionally, clean up the temp file
           rm "$temp_file"
+          
 
 
       # Step 3: Handle case when no jobs were executed
