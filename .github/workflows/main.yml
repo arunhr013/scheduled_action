@@ -84,15 +84,18 @@ jobs:
               echo "$log_entry,$server,$scheduleTime,$file_name" >> "$temp_file"
             fi
           done < "$input_file"
+
           
+          # Show the contents of the temp file for debugging
+          echo "Contents of temp_input_log.csv after processing:"
+          cat "$temp_file"
+
           # Use cp instead of mv to replace the original file with the new one
           cp "$temp_file" "$input_file"
 
-          ls -l "$input_file"
+           # Step 3: Show the contents of the updated input file for verification
+          echo "Contents of input_log.csv after replacement:"
           cat "$input_file"
-
-           ls -l "$temp_file"
-          cat "$temp_file"
           
           # Optionally, clean up the temp file
           rm "$temp_file"
