@@ -85,8 +85,12 @@ jobs:
             fi
           done < "$input_file"
           
-          # Replace the original input file with the updated one
-          mv "$temp_file" "$input_file"
+          # Use cp instead of mv to replace the original file with the new one
+          cp "$temp_file" "$input_file"
+          
+          # Optionally, clean up the temp file
+          rm "$temp_file"
+
 
       # Step 3: Handle case when no jobs were executed
       - name: No jobs to run
