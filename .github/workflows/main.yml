@@ -64,6 +64,7 @@ jobs:
           
           # Create an empty temporary file for the new CSV
           touch "$temp_file"
+          echo "log_entry,server,scheduleTime" > temp_input_log.csv
           
           # Loop through each row of the CSV and process it
           while IFS=, read -r log_entry server scheduleTime file_name; do
@@ -112,6 +113,6 @@ jobs:
           git config --local user.name "GitHub Action"
           git config --local user.email "action@github.com"
           git add input_log.csv
-          git commit -m "Log input entry: ${{ github.event.inputs.log_entry }}"
+          git commit -m "Commit"
           git pull
           git push
