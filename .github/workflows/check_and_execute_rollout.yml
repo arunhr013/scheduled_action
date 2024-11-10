@@ -1,5 +1,7 @@
 name: Check and Execute Rollout
-
+permissions:
+  contents: write  # Allow write access to the repository contents (including committing)
+  
 on:
   schedule:
     - cron: '*/5 * * * *'  # Runs every 5 minutes, adjust as needed.
