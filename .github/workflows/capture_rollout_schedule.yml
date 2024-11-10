@@ -10,7 +10,9 @@ on:
         required: true
       ScheduledTime:
         description: 'Scheduled Time for rollout (format: yyyy-MM-dd HH:mm:ss)'
-        required: true
+        required: false
+        default: $(date +"%Y-%m-%d %H:%M:%S")
+
 
 jobs:
   capture_inputs:
