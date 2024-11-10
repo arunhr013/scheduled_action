@@ -2,7 +2,7 @@ name: Check and Execute Rollout
 
 on:
   schedule:
-    - cron: '*/5 * * * *' # Runs every 5 minutes. Adjust based on your requirement.
+    - cron: '*/5 * * * *'  # Runs every 5 minutes, adjust as needed.
   workflow_dispatch:  # Allows for manual triggering if needed.
 
 jobs:
@@ -13,8 +13,12 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Read CSV file and process scheduled rollouts
+      - name: Read CSV file, execute rollouts and remove executed rows
         run: |
+          # Initialize an empty array to store rows where ScheduledTime <= current_time
+          valid_rollouts=()
+          remaining_rows=()
+
           # Read the CSV file and process each row
           while IFS=',' read -r ServerName ScheduledTime
           do
@@ -27,14 +31,42 @@ jobs:
 
               echo "Current time: $current_time"
 
-              # Compare scheduled time with current time (greater or equal)
+              # Compare ScheduledTime with current_time
               if [[ "$ScheduledTime" <= "$current_time" ]]; then
-                echo "Executing rollout for $ServerName"
-
-                # Insert your rollout logic here, such as calling an API or running a script
-                # Example: curl -X POST "https://api.example.com/execute_rollout?server=$ServerName"
+                echo "ScheduledTime for $ServerName is equal to or earlier than current time. Adding to valid rollouts."
+                
+                # Store the valid row in the array for execution
+                valid_rollouts+=("$ServerName,$ScheduledTime")
               else
-                echo "Rollout for $ServerName is scheduled for later."
+                # Keep the remaining row for future processing
+                remaining_rows+=("$ServerName,$ScheduledTime")
               fi
             fi
           done < rollout_schedule.csv
+
+          # Output all valid rollouts
+          if [ ${#valid_rollouts[@]} -gt 0 ]; then
+            echo "Executing rollouts for the following servers:"
+            for rollout in "${valid_rollouts[@]}"; do
+              echo "Executing rollout for: $rollout"
+              
+              # Insert your rollout execution logic here, e.g., triggering an API, script, etc.
+              # Example: curl -X POST "https://api.example.com/execute_rollout?server=${rollout[0]}"
+            done
+          else
+            echo "No rollouts scheduled for the current time or earlier."
+          fi
+
+          # Write the remaining rows back into the CSV file, excluding executed rollouts
+          echo "ServerName,ScheduledTime" > rollout_schedule.csv
+          for row in "${remaining_rows[@]}"; do
+            echo "$row" >> rollout_schedule.csv
+          done
+
+      - name: Commit updated CSV
+        uses: EndBug/add-and-commit@v7
+        with:
+          author_name: 'GitHub Actions'
+          author_email: 'actions@github.com'
+          message: 'Update rollout schedule after processing'
+          add: 'rollout_schedule.csv'
