@@ -32,6 +32,7 @@ jobs:
               echo "Current time: $current_time"
 
               # Compare ScheduledTime with current_time
+              # Proper syntax for string comparison
               if [[ "$ScheduledTime" <= "$current_time" ]]; then
                 echo "ScheduledTime for $ServerName is equal to or earlier than current time. Adding to valid rollouts."
                 
