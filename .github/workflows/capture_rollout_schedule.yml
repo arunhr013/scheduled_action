@@ -1,0 +1,35 @@
+name: Capture Rollout Schedule
+
+on:
+  workflow_dispatch:
+    inputs:
+      ServerName:
+        description: 'Name of the server'
+        required: true
+      ScheduledTime:
+        description: 'Scheduled Time for rollout (format: yyyy-MM-dd HH:mm:ss)'
+        required: true
+
+jobs:
+  capture_inputs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Append input to CSV
+        run: |
+          # Check if the CSV file already exists
+          if [ ! -f "rollout_schedule.csv" ]; then
+            echo "ServerName,ScheduledTime" > rollout_schedule.csv
+          fi
+          echo "${{ github.event.inputs.ServerName }},${{ github.event.inputs.ScheduledTime }}" >> rollout_schedule.csv
+
+      - name: Commit CSV changes
+        uses: EndBug/add-and-commit@v7
+        with:
+          author_name: 'GitHub Actions'
+          author_email: 'actions@github.com'
+          message: 'Update rollout schedule'
+          add: 'rollout_schedule.csv'
