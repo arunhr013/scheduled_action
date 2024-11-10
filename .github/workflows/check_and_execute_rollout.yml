@@ -73,8 +73,9 @@ jobs:
           git status
 
       - name: Commit updated CSV if changes were made
-        run: |
-          # Ensure that changes are staged, committed, and pushed if any
-          git add rollout_schedule.csv
-          git commit -m "Update rollout schedule after processing" || echo "No changes to commit"
-          git push
+        with:
+          author_name: 'GitHub Actions'
+          author_email: 'actions@github.com'
+          message: 'Update rollout schedule'
+          add: 'rollout_schedule.csv'
+          
