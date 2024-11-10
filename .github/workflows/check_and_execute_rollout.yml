@@ -1,0 +1,40 @@
+name: Check and Execute Rollout
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # Runs every 5 minutes. Adjust based on your requirement.
+  workflow_dispatch:  # Allows for manual triggering if needed.
+
+jobs:
+  check_rollout_schedule:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Read CSV file and process scheduled rollouts
+        run: |
+          # Read the CSV file and process each row
+          while IFS=',' read -r ServerName ScheduledTime
+          do
+            # Skip the header row
+            if [[ "$ServerName" != "ServerName" ]]; then
+              echo "Checking rollout for $ServerName scheduled at $ScheduledTime"
+
+              # Get the current time in the same format as ScheduledTime (for comparison)
+              current_time=$(date +"%Y-%m-%d %H:%M:%S")
+
+              echo "Current time: $current_time"
+
+              # Compare scheduled time with current time (greater or equal)
+              if [[ "$ScheduledTime" <= "$current_time" ]]; then
+                echo "Executing rollout for $ServerName"
+
+                # Insert your rollout logic here, such as calling an API or running a script
+                # Example: curl -X POST "https://api.example.com/execute_rollout?server=$ServerName"
+              else
+                echo "Rollout for $ServerName is scheduled for later."
+              fi
+            fi
+          done < rollout_schedule.csv
