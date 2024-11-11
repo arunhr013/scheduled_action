@@ -49,22 +49,29 @@ jobs:
             fi
           done < rollout_schedule.csv
 
+        
+
+
           # Output all valid rollouts
           if [ ${#valid_rollouts[@]} -gt 0 ]; then
             echo "Executing rollouts for the following servers:"
             for rollout in "${valid_rollouts[@]}"; do
-              echo "Executing rollout for: $rollout"
-              
-              # Insert your rollout execution logic here, e.g., triggering an API, script, etc.
-              # Example: curl -X POST "https://api.example.com/execute_rollout?server=${rollout[0]}"
-              echo "Triggering rollout action..."
-              curl -X POST \
+            server=$(echo $rollout | cut -d',' -f1)
+            time=$(echo $rollout | cut -d',' -f2)
+
+            echo "Triggering rollout for $server at $time"
+            curl -X POST \
               -H "Authorization: Bearer ${{ secrets.PAT_TOKEN }}" \
               -H "Accept: application/vnd.github+json" \
-                 https://api.github.com/repos/${{ github.repository }}/actions/workflows/rollout.yml/dispatches \
-              -d '{"ref":"main"}'
-
-            done
+              https://api.github.com/repos/${{ github.repository }}/actions/workflows/rollout-action.yml/dispatches \
+              -d '{
+                    "ref": "main",
+                    "inputs": {
+                      "server_name": "'"$server"'",
+                      "scheduled_time": "'"$time"'"
+                    }
+                  }'
+          done
           else
             echo "No rollouts scheduled for the current time or earlier."
           fi
