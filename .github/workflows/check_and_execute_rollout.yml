@@ -58,6 +58,8 @@ jobs:
               # Insert your rollout execution logic here, e.g., triggering an API, script, etc.
               # Example: curl -X POST "https://api.example.com/execute_rollout?server=${rollout[0]}"
               echo "Triggering rollout action..."
+              curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              https://api.github.com/repos/${{ github.repository }}/actions/permissions
               curl -X POST \
               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
               -H "Accept: application/vnd.github+json" \
