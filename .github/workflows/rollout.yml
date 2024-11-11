@@ -1,4 +1,6 @@
 name: Rollout Action
+permissions:
+  actions: write  
 on:
   workflow_dispatch:
 
