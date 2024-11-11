@@ -3,11 +3,22 @@ permissions:
   actions: write  
 on:
   workflow_dispatch:
+    inputs:
+      server_name:
+        description: 'Server name for rollout'
+        required: true
+      scheduled_time:
+        description: 'Scheduled time for the rollout'
+        required: true
 
 jobs:
-  rollout:
+  perform_rollout:
     runs-on: ubuntu-latest
     steps:
+      - name: Print Inputs
+        run: |
+          echo "Starting rollout for server: ${{ github.event.inputs.server_name }}"
+          echo "Scheduled time: ${{ github.event.inputs.scheduled_time }}"
       - name: Initial Preparation
         run: |
           echo "Starting rollout process..."
