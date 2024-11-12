@@ -1,0 +1,64 @@
+name: Merge Rollout Schedules
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+
+jobs:
+  merge-schedules:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Merge Schedules
+        run: |
+          # Create necessary directories
+          mkdir -p .github/temp_schedules
+          mkdir -p .github/schedules
+          
+          # Create main CSV if it doesn't exist
+          main_csv=".github/schedules/rollout_schedule.csv"
+          if [ ! -f "$main_csv" ]; then
+            echo "timestamp,server,environment,scheduled_time,description,user,status" > "$main_csv"
+          fi
+          
+          # Get all temporary schedule files
+          temp_files=$(find .github/temp_schedules -name 'schedule_*.csv')
+          
+          # Read existing schedules
+          existing_schedules=()
+          while IFS=',' read -r timestamp server env scheduled_time description user status; do
+            existing_schedules+=("$server,$env,$scheduled_time")
+          done < "$main_csv"
+          
+          # Process each temp file
+          for temp_file in $temp_files; do
+            # Check for duplicates
+            while IFS=',' read -r timestamp server env scheduled_time description user status; do
+              schedule_key="$server,$env,$scheduled_time"
+              if [[ ! " ${existing_schedules[@]} " =~ " $schedule_key " ]]; then
+                # Append to main CSV
+                echo "$timestamp,$server,$env,$scheduled_time,$description,$user,$status" >> "$main_csv"
+                existing_schedules+=("$schedule_key")
+              fi
+            done < "$temp_file"
+            
+            # Remove processed temp file
+            rm "$temp_file"
+          done
+          
+          # Sort main CSV (keeping header) to maintain order
+          (head -n 1 "$main_csv" && tail -n +2 "$main_csv" | sort -t',' -k4) > "$main_csv.tmp"
+          mv "$main_csv.tmp" "$main_csv"
+          
+          # Commit and push changes
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add "$main_csv"
+          
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Merge rollout schedules"
+            git push origin main
+          fi
