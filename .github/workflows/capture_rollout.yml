@@ -1,0 +1,44 @@
+name: Write Rollout Schedule to Temp CSV
+on:
+  workflow_dispatch:
+    inputs:
+      server:
+        description: 'Server Name'
+        required: true
+        type: string
+      environment:
+        description: 'Environment'
+        required: true
+        type: choice
+        options:
+        - dev
+        - staging
+        - prod
+      scheduled_time:
+        description: 'Scheduled Time (YYYY-MM-DD HH:MM)'
+        required: true
+        type: string
+      description:
+        description: 'Rollout Description'
+        required: false
+        type: string
+
+jobs:
+  write-to-temp-csv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Write Schedule to Temp CSV
+        run: |
+          # Create temp directory if it doesn't exist
+          mkdir -p .github/temp_schedules
+          
+          # Generate unique temp file name using timestamp and random number
+          timestamp=$(date +%Y%m%d_%H%M%S_%N)
+          temp_csv=".github/temp_schedules/schedule_${timestamp}.csv"
+          
+          # Write schedule to temp file
+          echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ"),${{ github.event.inputs.server }},${{ github.event.inputs.environment }},${{ github.event.inputs.scheduled_time }},${{ github.event.inputs.description }},${{ github.actor }},scheduled" > "$temp_csv"
+          
+          echo "Wrote schedule to $temp_csv"
