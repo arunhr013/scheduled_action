@@ -44,7 +44,9 @@ jobs:
             done < "$temp_file"
             
             # Remove processed temp file
-            rm "$temp_file"
+            rm "$temp_file" || echo "Failed to remove $temp_file"
+            git rm "$temp_file"
+
           done
           
           # Sort main CSV (keeping header) to maintain order
