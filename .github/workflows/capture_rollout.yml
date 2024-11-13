@@ -44,3 +44,15 @@ jobs:
           echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ"),${{ github.event.inputs.server }},${{ github.event.inputs.environment }},${{ github.event.inputs.scheduled_time }},${{ github.event.inputs.description }},${{ github.actor }},scheduled" > "$temp_csv"
           
           echo "Wrote schedule to $temp_csv"
+
+           # Commit and push changes
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add "$main_csv"
+          
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Merge rollout schedules"
+            git push origin main
+          fi
