@@ -22,11 +22,12 @@ jobs:
           remaining_rows=()
 
           # Read the CSV file and process each row
-          while IFS=',' read -r ServerName ScheduledTime
+          while IFS=',' read -r timestamp server environment scheduled_time description user status
+
           do
             # Skip the header row
-            if [[ "$ServerName" != "ServerName" ]]; then
-              echo "Checking rollout for $ServerName scheduled at $ScheduledTime"
+            if [[ "$timestamp" != "timestamp" ]]; then
+              echo "Checking rollout for $server scheduled at $scheduled_time"
 
               # Get the current time in the same format as ScheduledTime (for comparison)
               current_time=$(date +"%Y-%m-%d %H:%M:%S")
@@ -38,7 +39,7 @@ jobs:
               echo "ScheduledTime: $scheduled_time"
               echo "Current time: $current_time"
               if [[ "$scheduled_time" < "$current_time" || "$scheduled_time" == "$current_time" ]]; then
-                echo "ScheduledTime for $ServerName is equal to or earlier than current time. Adding to valid rollouts."
+                echo "ScheduledTime for $server is equal to or earlier than current time. Adding to valid rollouts."
                 
                 # Store the valid row in the array for execution
                 valid_rollouts+=("$server,$scheduled_time")
