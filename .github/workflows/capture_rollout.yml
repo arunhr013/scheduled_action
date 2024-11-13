@@ -40,10 +40,12 @@ jobs:
           timestamp=$(date +%Y%m%d_%H%M%S_%N)
           temp_csv=".github/tempschedules/schedule_${timestamp}.csv"
           
-          # Write schedule to temp file
-          echo "timestamp,server,environment,scheduled_time,description,user,status" > "$temp_csv"
-          echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ"),${{ github.event.inputs.server }},${{ github.event.inputs.environment }},${{ github.event.inputs.scheduled_time }},${{ github.event.inputs.description }},${{ github.actor }},scheduled" > "$temp_csv"
-        
+          # Write header to CSV file using tee for better visibility
+          echo "timestamp,server,environment,scheduled_time,description,user,status" | tee "$temp_csv"
+    
+          # Append the schedule data to the CSV
+          echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ"),${{ github.event.inputs.server }},${{ github.event.inputs.environment }},${{ github.event.inputs.scheduled_time }},${{ github.event.inputs.description }},${{ github.actor }},scheduled" >> "$temp_csv"
+  
           echo "Wrote schedule to $temp_csv"
 
            # Commit and push changes
