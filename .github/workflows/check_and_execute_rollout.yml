@@ -82,7 +82,7 @@ jobs:
             for row in "${remaining_rows[@]}"; do
             echo "$row"
               done
-          } > 
+          } > .github/schedules/rollout_schedule.csv
       
       - name: Check if CSV file was modified
         run: |
