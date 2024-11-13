@@ -48,7 +48,7 @@ jobs:
            # Commit and push changes
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add "$main_csv"
+          git add "$temp_csv"
           
           if git diff --staged --quiet; then
             echo "No changes to commit"
