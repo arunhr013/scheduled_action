@@ -35,16 +35,16 @@ jobs:
 
               # Compare ScheduledTime with current_time
               # Proper syntax for string comparison
-              echo "ScheduledTime: $ScheduledTime"
+              echo "ScheduledTime: $scheduled_time"
               echo "Current time: $current_time"
-              if [[ "$scheduleTime" < "$current_time" || "$scheduleTime" == "$current_time" ]]; then
+              if [[ "$scheduled_time" < "$current_time" || "$scheduled_time" == "$current_time" ]]; then
                 echo "ScheduledTime for $ServerName is equal to or earlier than current time. Adding to valid rollouts."
                 
                 # Store the valid row in the array for execution
-                valid_rollouts+=("$ServerName,$ScheduledTime")
+                valid_rollouts+=("$server,$scheduled_time")
               else
                 # Keep the remaining row for future processing
-                remaining_rows+=("$ServerName,$ScheduledTime")
+                remaining_rows+=("$timestamp,$server,$environment,$scheduled_time,$description,$user,$status")
               fi
             fi
           done < .github/schedules/rollout_schedule.csv
@@ -76,7 +76,7 @@ jobs:
           fi
 
           # Write the remaining rows back into the CSV file, excluding executed rollouts
-          echo "ServerName,ScheduledTime" > rollout_schedule.csv
+          echo "timestamp,server,environment,scheduled_time,description,user,status" > .github/schedules/rollout_schedule.csv
           for row in "${remaining_rows[@]}"; do
             echo "$row" >> .github/schedules/rollout_schedule.csv
           done
