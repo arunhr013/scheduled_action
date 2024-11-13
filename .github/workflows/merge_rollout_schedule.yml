@@ -13,7 +13,7 @@ jobs:
       - name: Merge Schedules
         run: |
           # Create necessary directories
-          mkdir -p .github/temp_schedules
+          mkdir -p .github/tempschedules
           mkdir -p .github/schedules
           
           # Create main CSV if it doesn't exist
@@ -23,7 +23,7 @@ jobs:
           fi
           
           # Get all temporary schedule files
-          temp_files=$(find .github/temp_schedules -name 'schedule_*.csv')
+          temp_files=$(find .github/tempschedules -name 'schedule_*.csv')
           
           # Read existing schedules
           existing_schedules=()
