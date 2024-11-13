@@ -43,7 +43,7 @@ jobs:
           # Write schedule to temp file
           echo "timestamp,server,environment,scheduled_time,description,user,status" > "$temp_csv"
           echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ"),${{ github.event.inputs.server }},${{ github.event.inputs.environment }},${{ github.event.inputs.scheduled_time }},${{ github.event.inputs.description }},${{ github.actor }},scheduled" > "$temp_csv"
-          
+        
           echo "Wrote schedule to $temp_csv"
 
            # Commit and push changes
