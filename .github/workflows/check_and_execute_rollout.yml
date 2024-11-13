@@ -47,8 +47,7 @@ jobs:
                 remaining_rows+=("$ServerName,$ScheduledTime")
               fi
             fi
-          done < rollout_schedule.csv
-
+          done < .github/schedules/rollout_schedule.csv
         
 
 
@@ -79,7 +78,7 @@ jobs:
           # Write the remaining rows back into the CSV file, excluding executed rollouts
           echo "ServerName,ScheduledTime" > rollout_schedule.csv
           for row in "${remaining_rows[@]}"; do
-            echo "$row" >> rollout_schedule.csv
+            echo "$row" >> .github/schedules/rollout_schedule.csv
           done
 
       
