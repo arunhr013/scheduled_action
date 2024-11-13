@@ -76,12 +76,13 @@ jobs:
             echo "No rollouts scheduled for the current time or earlier."
           fi
 
-          # Write the remaining rows back into the CSV file, excluding executed rollouts
-          echo "timestamp,server,environment,scheduled_time,description,user,status" > .github/schedules/rollout_schedule.csv
-          for row in "${remaining_rows[@]}"; do
-            echo "$row" >> .github/schedules/rollout_schedule.csv
-          done
-
+          # Write the updated CSV, ensuring the header is kept intact
+          {
+            echo "timestamp,server,environment,scheduled_time,description,user,status"
+            for row in "${remaining_rows[@]}"; do
+            echo "$row"
+              done
+          } > .github/schedules/rollout_schedule.csv
       
       - name: Check if CSV file was modified
         run: |
