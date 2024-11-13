@@ -68,7 +68,7 @@ jobs:
                     "ref": "main",
                     "inputs": {
                       "server_name": "'"$server"'",
-                      "scheduled_time": "'"$scheduled_time"'"
+                      "scheduled_time": "'"$time"'"
                     }
                   }'
           done
