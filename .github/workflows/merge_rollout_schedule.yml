@@ -64,5 +64,6 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "Merge rollout schedules"
+            git pull
             git push origin main
           fi
