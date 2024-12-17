@@ -1,61 +1,22 @@
-name: Write Rollout Schedule to Temp CSV
+name: WMS Rollout PROD - Public Cloud
 on:
   workflow_dispatch:
     inputs:
-      server:
-        description: 'Server Name'
-        required: true
-        type: string
-      environment:
-        description: 'Environment'
-        required: true
-        type: choice
-        options:
-        - dev
-        - staging
-        - prod
-      scheduled_time:
-        description: 'Scheduled Time (YYYY-MM-DD HH:MM)'
-        required: true
-        type: string
-      description:
-        description: 'Rollout Description'
+      Scheduled_Time:
+        description: "In UTC timezone - (Format - dd/mm/yyyy HH:MM:SS). If not provided, request will be executed within next minute."
         required: false
-        type: string
 
 jobs:
-  write-to-temp-csv:
+  dynamic-timestamp:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Write Schedule to Temp CSV
-        run: |
-          echo "Current working directory: $(pwd)"
+      - name: Set current timestamp in GMT
+        id: get-timestamp
+        run: echo "SCHEDULE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
 
-          # Create temp directory if it doesn't exist
-          mkdir -p .github/tempschedules
-          
-          # Generate unique temp file name using timestamp and random number
-          timestamp=$(date +%Y%m%d_%H%M%S_%N)
-          temp_csv=".github/tempschedules/schedule_${timestamp}.csv"
-          
-          # Write header to CSV file using tee for better visibility
-          echo "timestamp,server,environment,scheduled_time,description,user,status" | tee "$temp_csv"
-    
-          # Append the schedule data to the CSV
-          echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ"),${{ github.event.inputs.server }},${{ github.event.inputs.environment }},${{ github.event.inputs.scheduled_time }},${{ github.event.inputs.description }},${{ github.actor }},scheduled" >> "$temp_csv"
-  
-          echo "Wrote schedule to $temp_csv"
-
-           # Commit and push changes
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add "$temp_csv"
-          
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "Merge rollout schedules"
-            git push origin main
-          fi
+      - name: Display Scheduled Time
+        id: print-timestamp
+        run: echo "Scheduled Time ${INPUT_SCHEDULED_TIME:-$SCHEDULE_TIMESTAMP}"
+        env:
+          INPUT_SCHEDULED_TIME: ${{ github.event.inputs.Scheduled_Time }}
+          SCHEDULE_TIMESTAMP: ${{ env.SCHEDULE_TIMESTAMP }}
